@@ -24,15 +24,29 @@ import os
 from dotenv import load_dotenv
 
 
-# Load Firebase credentials from Railway environment variable
-firebase_credentials_json = os.getenv("FIREBASE_CREDENTIALS")
+# Load environment variables
+load_dotenv()
 
-if firebase_credentials_json:
-    cred_dict = json.loads(firebase_credentials_json)  # Convert string to dict
-    cred = credentials.Certificate(cred_dict)
-    initialize_app(cred, {"databaseURL": os.getenv("DATABASE_URL")})
-else:
-    print("Error: FIREBASE_CREDENTIALS environment variable is missing!")
+# Get Telegram bot token
+TELEGRAM_BOT_TOKEN = os.getenv("BOT_TOKEN")
+
+# Check if BOT_TOKEN is set
+if not TELEGRAM_BOT_TOKEN:
+    raise ValueError("Error: BOT_TOKEN environment variable is missing!")
+
+# Initialize Telegram Bot
+bot = telebot.TeleBot(TELEGRAM_BOT_TOKEN)
+
+# Get Firebase credentials path
+firebase_credentials_path = os.getenv("FIREBASE_CREDENTIALS")
+
+# Check if FIREBASE_CREDENTIALS is set
+if not firebase_credentials_path:
+    raise ValueError("Error: FIREBASE_CREDENTIALS environment variable is missing!")
+
+# Initialize Firebase
+cred = credentials.Certificate(firebase_credentials_path)
+firebase_admin.initialize_app(cred)
 
 
 # Global Error Handler Function
