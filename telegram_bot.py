@@ -19,19 +19,21 @@ response = requests.get(
     timeout=30  # Increase timeout from 15s to 30s
 )
 
-
-from dotenv import load_dotenv
+import json
 import os
-
-load_dotenv()  # Load environment variables from .env file
-
-TELEGRAM_BOT_TOKEN = os.getenv("BOT_TOKEN")
-DATABASE_URL = os.getenv("DATABASE_URL")
-cred = credentials.Certificate("firebase_credentials.json")
+from dotenv import load_dotenv
 
 
-# Initialize Telegram Bot
-bot = telebot.TeleBot(BOT_TOKEN)
+# Load Firebase credentials from Railway environment variable
+firebase_credentials_json = os.getenv("FIREBASE_CREDENTIALS")
+
+if firebase_credentials_json:
+    cred_dict = json.loads(firebase_credentials_json)  # Convert string to dict
+    cred = credentials.Certificate(cred_dict)
+    initialize_app(cred, {"databaseURL": os.getenv("DATABASE_URL")})
+else:
+    print("Error: FIREBASE_CREDENTIALS environment variable is missing!")
+
 
 # Global Error Handler Function
 import logging
