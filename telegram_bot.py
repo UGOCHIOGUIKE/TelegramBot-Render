@@ -39,6 +39,8 @@ if not firebase_admin._apps:
         'databaseURL': os.getenv("DATABASE_URL")
     })
 
+# Initialize Telegram Bot
+bot = telebot.TeleBot(BOT_TOKEN)
 
 # Global Error Handler Function
 
