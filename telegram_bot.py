@@ -14,43 +14,35 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
+import json
+import os
+from dotenv import load_dotenv
+import logging
+
 response = requests.get(
     "https://api.telegram.org",
     timeout=30  # Increase timeout from 15s to 30s
 )
 
-import json
-import os
-from dotenv import load_dotenv
 
+# Load Firebase credentials from environment variable
+firebase_credentials_json = os.getenv("FIREBASE_CREDENTIALS")
 
-# Load environment variables
-load_dotenv()
-
-# Get Telegram bot token
-TELEGRAM_BOT_TOKEN = os.getenv("BOT_TOKEN")
-
-# Check if BOT_TOKEN is set
-if not TELEGRAM_BOT_TOKEN:
-    raise ValueError("Error: BOT_TOKEN environment variable is missing!")
-
-# Initialize Telegram Bot
-bot = telebot.TeleBot(TELEGRAM_BOT_TOKEN)
-
-# Get Firebase credentials path
-firebase_credentials_path = os.getenv("FIREBASE_CREDENTIALS")
-
-# Check if FIREBASE_CREDENTIALS is set
-if not firebase_credentials_path:
+if not firebase_credentials_json:
     raise ValueError("Error: FIREBASE_CREDENTIALS environment variable is missing!")
 
-# Initialize Firebase
-cred = credentials.Certificate(firebase_credentials_path)
-firebase_admin.initialize_app(cred)
+# Convert JSON string back to dictionary
+firebase_credentials_dict = json.loads(firebase_credentials_json)
 
+# Initialize Firebase if not already initialized
+if not firebase_admin._apps:
+    cred = credentials.Certificate(firebase_credentials_dict)
+    firebase_admin.initialize_app(cred, {
+        'databaseURL': os.getenv("DATABASE_URL")
+    })
 
 # Global Error Handler Function
-import logging
+
 logging.basicConfig(filename="bot_errors.log", level=logging.ERROR)
 
 def error_handler(func):
