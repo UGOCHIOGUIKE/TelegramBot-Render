@@ -26,13 +26,13 @@ response = requests.get(
 
 
 # Load Firebase credentials from environment variable
-firebase_credentials_json = os.getenv("FIREBASE_CREDENTIALS")
+firebase_credentials_path = "firebase_credentials.json"
 
-if not firebase_credentials_json:
-    raise ValueError("Error: FIREBASE_CREDENTIALS environment variable is missing!")
-
-# Convert JSON string back to dictionary
-firebase_credentials_dict = json.loads(firebase_credentials_json)
+try:
+    with open(firebase_credentials_path, "r") as f:
+        firebase_credentials_dict = json.load(f)
+except FileNotFoundError:
+    raise ValueError(f"Error: Firebase credentials file '{firebase_credentials_path}' not found!")
 
 # Initialize Firebase if not already initialized
 if not firebase_admin._apps:
