@@ -3,6 +3,8 @@ schedule
 python-dotenv==1.0.0
 gunicorn
 
+Flask
+
 aiohappyeyeballs==2.4.6
 aiohttp==3.11.12
 aiosignal==1.3.2
