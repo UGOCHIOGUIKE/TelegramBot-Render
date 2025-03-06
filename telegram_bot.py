@@ -32,12 +32,13 @@ if not firebase_credentials_json:
 
 firebase_credentials_dict = json.loads(firebase_credentials_json)
 
-# Initialize Firebase if not already initialized
+# Initialize Firebase
 if not firebase_admin._apps:
     cred = credentials.Certificate(firebase_credentials_dict)
     firebase_admin.initialize_app(cred, {
         'databaseURL': os.getenv("DATABASE_URL")
     })
+
 
 # Global Error Handler Function
 
