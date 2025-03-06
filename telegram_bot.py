@@ -469,7 +469,7 @@ def handle_registration_confirmation(call):
                                                f" welcome {user_data['email']}.\n"
                                                f"You can now use the bot services.")
         if ADMIN_CHAT_ID and isinstance(ADMIN_CHAT_ID, int):
-            bot.send_message(ADMIN_CHAT_ID, f"✅ 🚀 New user {user_data['username \n registered']} has registered \n")
+            bot.send_message(ADMIN_CHAT_ID, f"✅ 🚀 New user {user_data['username']} has registered \n")
 
         # Show buy/sell buttons
         show_buy_sell_buttons(call.message.chat.id)
