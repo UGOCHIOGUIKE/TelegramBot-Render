@@ -58,59 +58,20 @@ logger.info("Flask server started")
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_CHAT_ID = os.getenv("ADMIN_CHAT_ID")
 DATABASE_URL = os.getenv("DATABASE_URL")
-FIREBASE_CREDENTIALS_JSON = os.getenv("FIREBASE_CREDENTIALS_JSON")
 
-# Initialize Firebase
-try:
-    if FIREBASE_CREDENTIALS_JSON:
-        logger.info("✅ Using Firebase credentials from environment variable")
+firebase_credentials_json = os.getenv("FIREBASE_CREDENTIALS_JSON")
 
-        # Convert JSON string to a temporary dictionary and create credentials
-        firebase_credentials_dict = json.loads(FIREBASE_CREDENTIALS_JSON)
+if firebase_credentials_json:
+    try:
+        firebase_credentials = json.loads(firebase_credentials_json)
+        cred = credentials.Certificate(firebase_credentials)
+        firebase_admin.initialize_app(cred)
+        print("✅ Firebase initialized from environment variable")
+    except Exception as e:
+        print(f"❌ Error initializing Firebase: {e}")
+else:
+    raise FileNotFoundError("❌ Firebase credentials not found in environment variables")
 
-        # Write this dictionary to a temporary JSON file (needed for Firebase SDK)
-        temp_credentials_path = "/tmp/firebase_credentials.json"  # Use /tmp for Render
-        with open(temp_credentials_path, "w") as temp_file:
-            json.dump(firebase_credentials_dict, temp_file)
-
-        # Load credentials from temporary file
-        cred = credentials.Certificate(temp_credentials_path)
-
-    else:
-        logger.info("✅ Using Firebase credentials from local file")
-        firebase_credentials_path = "firebase_credentials.json"
-
-        # Ensure the credentials file exists
-        if not os.path.exists(firebase_credentials_path):
-            raise FileNotFoundError(f"❌ Firebase credentials file not found: {firebase_credentials_path}")
-
-        # Load credentials from the local file
-        cred = credentials.Certificate(firebase_credentials_path)
-
-    # Initialize Firebase only if it's not already initialized
-    if not firebase_admin._apps:
-        firebase_admin.initialize_app(cred, {'databaseURL': DATABASE_URL})
-
-    # Test Firebase connection
-    ref = db.reference("/")
-    test_data = ref.get()
-    logger.info("✅ Successfully connected to Firebase!")
-    logger.info(f"🔍 Sample Data: {test_data}")
-
-except json.JSONDecodeError as e:
-    logger.error(f"❌ Invalid JSON in Firebase credentials: {e}")
-    raise
-except FileNotFoundError as e:
-    logger.error(f"❌ Firebase credentials file missing: {e}")
-    raise
-except Exception as e:
-    logger.error(f"❌ Firebase Connection Error: {str(e)}")
-    logger.error(traceback.format_exc())
-    raise
-
-# Ensure required variables exist
-if not BOT_TOKEN:
-    raise ValueError("❌ BOT_TOKEN is missing. Check environment variables.")
 
 # Convert ADMIN_CHAT_ID to integer
 try:
