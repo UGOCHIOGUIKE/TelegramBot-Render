@@ -60,6 +60,53 @@ ADMIN_CHAT_ID = os.getenv("ADMIN_CHAT_ID")
 DATABASE_URL = os.getenv("DATABASE_URL")
 FIREBASE_CREDENTIALS_JSON = os.getenv("FIREBASE_CREDENTIALS_JSON")
 
+# Initialize Firebase
+try:
+    if FIREBASE_CREDENTIALS_JSON:
+        logger.info("✅ Using Firebase credentials from environment variable")
+
+        # Convert JSON string to a temporary dictionary and create credentials
+        firebase_credentials_dict = json.loads(FIREBASE_CREDENTIALS_JSON)
+
+        # Write this dictionary to a temporary JSON file (needed for Firebase SDK)
+        temp_credentials_path = "/tmp/firebase_credentials.json"  # Use /tmp for Render
+        with open(temp_credentials_path, "w") as temp_file:
+            json.dump(firebase_credentials_dict, temp_file)
+
+        # Load credentials from temporary file
+        cred = credentials.Certificate(temp_credentials_path)
+
+    else:
+        logger.info("✅ Using Firebase credentials from local file")
+        firebase_credentials_path = "firebase_credentials.json"
+
+        # Ensure the credentials file exists
+        if not os.path.exists(firebase_credentials_path):
+            raise FileNotFoundError(f"❌ Firebase credentials file not found: {firebase_credentials_path}")
+
+        # Load credentials from the local file
+        cred = credentials.Certificate(firebase_credentials_path)
+
+    # Initialize Firebase only if it's not already initialized
+    if not firebase_admin._apps:
+        firebase_admin.initialize_app(cred, {'databaseURL': DATABASE_URL})
+
+    # Test Firebase connection
+    ref = db.reference("/")
+    test_data = ref.get()
+    logger.info("✅ Successfully connected to Firebase!")
+    logger.info(f"🔍 Sample Data: {test_data}")
+
+except json.JSONDecodeError as e:
+    logger.error(f"❌ Invalid JSON in Firebase credentials: {e}")
+    raise
+except FileNotFoundError as e:
+    logger.error(f"❌ Firebase credentials file missing: {e}")
+    raise
+except Exception as e:
+    logger.error(f"❌ Firebase Connection Error: {str(e)}")
+    logger.error(traceback.format_exc())
+    raise
 
 # Ensure required variables exist
 if not BOT_TOKEN:
@@ -79,44 +126,6 @@ except ValueError as e:
 bot = telebot.TeleBot(BOT_TOKEN)
 logger.info("✅ Telegram bot initialized successfully.")
 
-
-# Initialize Firebase
-try:
-    # Check if we're using environment variable for credentials (Render deployment)
-    if FIREBASE_CREDENTIALS_JSON:
-        logger.info("Using Firebase credentials from environment variable")
-        # Parse the JSON string from environment variable
-        firebase_credentials_dict = json.loads(FIREBASE_CREDENTIALS_JSON)
-        
-        # Initialize with credentials from environment variable
-        cred = credentials.Certificate(firebase_credentials_dict)
-    else:
-        # Fall back to file-based credentials for local development
-        logger.info("Using Firebase credentials from local file")
-        firebase_credentials_path = "firebase_credentials.json"
-
-        # Validate JSON file before use
-        with open(firebase_credentials_path, "r") as f:
-            json.load(f)  # Just to verify it's valid JSON
-
-        cred = credentials.Certificate(firebase_credentials_path)
-
-    if not firebase_admin._apps:
-        firebase_admin.initialize_app(cred, {'databaseURL': DATABASE_URL})
-
-    # Test Firebase connection
-    ref = db.reference("/")
-    test_data = ref.get()
-    logger.info("✅ Successfully connected to Firebase!")
-    logger.info(f"🔍 Sample Data: {test_data}")
-
-except json.JSONDecodeError as e:
-    logger.error(f"❌ Invalid JSON in Firebase credentials: {e}")
-    raise
-except Exception as e:
-    logger.error(f"❌ Firebase Connection Error: {str(e)}")
-    logger.error(traceback.format_exc())
-    raise
 
 # Global variables
 user_registration = {}
